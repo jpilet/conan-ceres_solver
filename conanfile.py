@@ -4,17 +4,14 @@ from conans import ConanFile, CMake, tools
 
 class CeresSolverConan(ConanFile):
     name = 'ceres-solver'
-    version = '1.13.0'
-    license = '<Put the package license here>'
+    version = '1.11.0'
+    license = 'http://ceres-solver.org/license.html'
     url = 'http://ceres-solver.org/'
     description = 'A large scale non-linear optimization library'
     settings = 'os', 'compiler', 'build_type', 'arch'
     options = {'shared': [True, False]}
     default_options = 'shared=True'
     generators = 'cmake'
-    requires = (
-        'eigen/[>=3.2.0,<3.3.4]@ntc/stable',
-    )
 
     def system_requirements(self):
         pack_names = None
@@ -30,7 +27,14 @@ class CeresSolverConan(ConanFile):
         if pack_names:
             installer = tools.SystemPackageTool()
             installer.update() # Update the package database
-            installer.install(" ".join(pack_names)) # Install the package
+            installer.install(' '.join(pack_names)) # Install the package
+
+    def requirements(self):
+        if '1.11.0' == self.version:
+            self.requires('eigen/[>=3.2.0,<3.3.4]@ntc/stable')
+        else:
+            self.requires('eigen/[>=3.2.0]@ntc/stable')
+
 
     def source(self):
         self.run(f'git clone https://ceres-solver.googlesource.com/ceres-solver {self.name}')
