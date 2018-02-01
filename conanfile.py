@@ -13,7 +13,7 @@ class CeresSolverConan(ConanFile):
     default_options = 'shared=True'
     generators = 'cmake'
     requires = (
-        'eigen/[>=3.0.0]@3dri/stable',
+        'eigen/[>=3.2.0,<3.3.4]@ntc/stable',
     )
 
     def system_requirements(self):
