@@ -3,8 +3,9 @@ from conans import ConanFile, CMake, tools
 
 
 class CeresSolverConan(ConanFile):
-    name = 'ceres-solver'
-    version = '1.11.0'
+    """ Tested with versions: 1.11.0, 1.13.0 """
+
+    name = 'ceres_solver'
     license = 'http://ceres-solver.org/license.html'
     url = 'http://ceres-solver.org/'
     description = 'A large scale non-linear optimization library'
