@@ -49,6 +49,7 @@ class CeresSolverConan(ConanFile):
         args.append('-DCXX11:BOOL=On')
         args.append('-DNO_CMAKE_PACKAGE_REGISTRY:BOOL=On')
         args.append('-DEIGEN_INCLUDE_DIR:PATH=%s'%os.path.join(self.deps_cpp_info['eigen'].rootpath, 'include', 'eigen3'))
+        args.append('-DEigen3_DIR:PATH=%s'%os.path.join(self.deps_cpp_info['eigen'].rootpath, 'share', 'eigen3', 'cmake'))
         args.append('-Wno-dev')
 
         cmake = CMake(self)
