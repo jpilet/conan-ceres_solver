@@ -96,4 +96,10 @@ class CeresSolverConan(ConanFile):
         else:
             self.cpp_info.resdirs.append(os.path.join('lib', 'cmake', 'Ceres'))
 
+        if self.settings.os == 'Linux':
+            self.cpp_info.libs.append(os.path.join(self.package_folder, 'lib', 'libceres.so'))
+        else:
+            self.cpp_info.libs.append(os.path.join(self.package_folder, 'lib', 'ceres.lib'))
+
+
 # vim: ts=4 sw=4 expandtab ffs=unix ft=python foldmethod=marker :
