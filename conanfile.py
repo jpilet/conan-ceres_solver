@@ -1,5 +1,5 @@
 import os, re
-from conans import ConanFile, CMake, tools
+from conans import ConanFile, CMake
 
 
 class CeresSolverConan(ConanFile):
@@ -13,22 +13,9 @@ class CeresSolverConan(ConanFile):
     options = {'shared': [True, False]}
     default_options = 'shared=True'
     generators = 'cmake'
-
-    def system_requirements(self):
-        pack_names = None
-        if tools.os_info.linux_distro == "ubuntu":
-            pack_names = ['libgoogle-glog-dev']
-
-            if self.settings.arch == 'x86':
-                full_pack_names = []
-                for pack_name in pack_names:
-                    full_pack_names += [pack_name + ':i386']
-                pack_names = full_pack_names
-
-        if pack_names:
-            installer = tools.SystemPackageTool()
-            installer.update() # Update the package database
-            installer.install(' '.join(pack_names)) # Install the package
+    requires = (
+        'glog/[>0.3.1]@ntc/stable'
+    )
 
     def requirements(self):
         if '1.11.0' == self.version:
@@ -50,6 +37,7 @@ class CeresSolverConan(ConanFile):
         args.append('-DNO_CMAKE_PACKAGE_REGISTRY:BOOL=On')
         args.append('-DEIGEN_INCLUDE_DIR:PATH=%s'%os.path.join(self.deps_cpp_info['eigen'].rootpath, 'include', 'eigen3'))
         args.append('-DEigen3_DIR:PATH=%s'%os.path.join(self.deps_cpp_info['eigen'].rootpath, 'share', 'eigen3', 'cmake'))
+        args.append('-Dglog_DIR:PATH=%s'%self.deps_cpp_info['glog'].rootpath)
         args.append('-Wno-dev')
 
         cmake = CMake(self)
@@ -75,12 +63,18 @@ class CeresSolverConan(ConanFile):
 
         regex = r'Eigen[^\s]+ (?P<base>.*.data.eigen.(?P<version>\d+.\d+.\d+).*?[a-z0-9]{40})'
         m = re.search(regex, data, re.IGNORECASE)
-        if not m:
+        if m:
+            data = data.replace(m.group('base'), '${CONAN_EIGEN_ROOT}')
+            data = data.replace(m.group('version'), self.deps_cpp_info['eigen'].version)
+        else:
             self.output.warn(f'Cannot find absolute path to Eigen in CMake find script for Ceres-Solver: {path}')
-            return
 
-        data = data.replace(m.group('base'), '${CONAN_EIGEN_ROOT}')
-        data = data.replace(m.group('version'), self.deps_cpp_info['eigen'].version)
+        regex = r'glog_DIR\s+(?P<base>.*?glog.*?[a-z0-9]{40})'
+        m = re.search(regex, data, re.IGNORECASE)
+        if m:
+            data = data.replace(m.group('base'), '${CONAN_GLOG_ROOT}')
+        else:
+            self.output.warn(f'Cannot find absolute path to Glog in CMake find script for Ceres-Solver: {path}')
 
         with open(path, 'w') as f: f.write(data)
 
