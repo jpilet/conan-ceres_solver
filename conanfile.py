@@ -92,9 +92,9 @@ class CeresSolverConan(ConanFile):
         # resdir to point to these.
         version_major = int(self.version.split('.')[1])
         if version_major < 13:
-            self.cpp_info.resdirs.append(os.path.join('share', 'Ceres'))
+            self.cpp_info.resdirs.append('/'.join(['share', 'Ceres']))
         else:
-            self.cpp_info.resdirs.append(os.path.join('lib', 'cmake', 'Ceres'))
+            self.cpp_info.resdirs.append('/'.join(['lib', 'cmake', 'Ceres']))
 
         if self.settings.os == 'Linux':
             lib = 'libceres.%s'%('so' if self.options.shared else 'a')
