@@ -3,7 +3,7 @@ from conans import ConanFile, CMake
 
 
 class CeresSolverConan(ConanFile):
-    """ Tested with versions: 1.11.0, 1.13.0 """
+    """ Tested with versions: 1.9.0, 1.11.0, 1.13.0 """
 
     name = 'ceres_solver'
     license = 'http://ceres-solver.org/license.html'
@@ -18,11 +18,11 @@ class CeresSolverConan(ConanFile):
     )
 
     def requirements(self):
-        if '1.11.0' == self.version:
+        version_major = int(self.version.split('.')[1])
+        if version_major < 13:
             self.requires('eigen/[>=3.2.0,<3.3.4]@ntc/stable')
         else:
             self.requires('eigen/[>=3.2.0]@ntc/stable')
-
 
     def source(self):
         self.run(f'git clone https://ceres-solver.googlesource.com/ceres-solver {self.name}')
@@ -51,12 +51,11 @@ class CeresSolverConan(ConanFile):
         cmake.build()
         cmake.install()
 
-        version_major = int(self.version.split('.')[1])
-        if version_major < 13:
-            path = os.path.join('share', 'Ceres')
-        else:
-            path = os.path.join('lib', 'cmake', 'Ceres')
-        self.fixFindPackage(os.path.join(self.package_folder, path, 'CeresConfig.cmake'))
+        # Every version of Ceres seems to install this file into a different location
+        for p in [os.path.join('share', 'Ceres'), 'CMake', os.path.join('lib', 'cmake', 'Ceres')]:
+            path = os.path.join(self.package_folder, p, 'CeresConfig.cmake')
+            if os.path.exists(path):
+                self.fixFindPackage(path)
 
     def fixFindPackage(self, path):
         """ Remove absolute paths from the CMake file """
@@ -82,6 +81,13 @@ class CeresSolverConan(ConanFile):
         else:
             self.output.warn(f'Cannot find absolute path to Glog in CMake find script for Ceres-Solver: {path}')
 
+        regex = r'GLOG[\w_]+DIR\s+(?P<base>.*?glog.*?[a-z0-9]{40})'
+        m = re.search(regex, data, re.IGNORECASE)
+        if m:
+            data = data.replace(m.group('base'), '${CONAN_GLOG_ROOT}')
+        else:
+            self.output.warn(f'Cannot find absolute path to Glog in CMake find script for Ceres-Solver: {path}')
+
         with open(path, 'w') as f: f.write(data)
 
     def package(self):
@@ -91,10 +97,14 @@ class CeresSolverConan(ConanFile):
         # The CMake files move in different versions, so we're going to use the
         # resdir to point to these.
         version_major = int(self.version.split('.')[1])
-        if version_major < 13:
-            self.cpp_info.resdirs.append('/'.join(['share', 'Ceres']))
-        else:
+        if version_major >= 13:
             self.cpp_info.resdirs.append('/'.join(['lib', 'cmake', 'Ceres']))
+        elif version_major == 11:
+            self.cpp_info.resdirs.append('/'.join(['share', 'Ceres']))
+        elif version_major == 9:
+            self.cpp_info.resdirs.append('CMake')
+        else:
+            self.output.warn('Not sure where to place CMake Find Script')
 
         if self.settings.os == 'Linux':
             lib = 'libceres.%s'%('so' if self.options.shared else 'a')
