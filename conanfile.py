@@ -37,8 +37,14 @@ class CeresSolverConan(ConanFile):
         args.append('-DNO_CMAKE_PACKAGE_REGISTRY:BOOL=On')
         args.append('-DEIGEN_INCLUDE_DIR:PATH=%s'%os.path.join(self.deps_cpp_info['eigen'].rootpath, 'include', 'eigen3'))
         args.append('-DEigen3_DIR:PATH=%s'%os.path.join(self.deps_cpp_info['eigen'].rootpath, 'share', 'eigen3', 'cmake'))
+
         args.append('-Dglog_DIR:PATH=%s'%self.deps_cpp_info['glog'].rootpath)
+        args.append('-DGLOG_INCLUDE_DIR:PATH=%s'%os.path.join(self.deps_cpp_info['glog'].rootpath, 'include'))
+        args.append('-DGLOG_LIBRARY:PATH=%s'%';'.join(os.path.join(self.deps_cpp_info['glog'].libdirs[0], l) for l in self.deps_cpp_info['glog'].libs))
+
         args.append('-Wno-dev')
+
+        self.output.info('CMake flags:\n%s'%'\n'.join(args))
 
         cmake = CMake(self)
         cmake.configure(source_folder=self.name, args=args)
@@ -91,9 +97,9 @@ class CeresSolverConan(ConanFile):
             self.cpp_info.resdirs.append(os.path.join('lib', 'cmake', 'Ceres'))
 
         if self.settings.os == 'Linux':
-            self.cpp_info.libs.append(os.path.join(self.package_folder, 'lib', 'libceres.so'))
+            self.cpp_info.libs.append(os.path.join('lib', 'libceres.so'))
         else:
-            self.cpp_info.libs.append(os.path.join(self.package_folder, 'lib', 'ceres.lib'))
+            self.cpp_info.libs.append(os.path.join('lib', 'ceres.lib'))
 
 
 # vim: ts=4 sw=4 expandtab ffs=unix ft=python foldmethod=marker :
