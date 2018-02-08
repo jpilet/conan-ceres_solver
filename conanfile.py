@@ -1,5 +1,5 @@
 import os, re
-from conans import ConanFile, CMake
+from conans import ConanFile, CMake, tools
 
 
 class CeresSolverConan(ConanFile):
@@ -12,6 +12,7 @@ class CeresSolverConan(ConanFile):
     settings = 'os', 'compiler', 'build_type', 'arch'
     options = {'shared': [True, False]}
     default_options = 'shared=True'
+    exports         = "patch*"
     generators = 'cmake'
     requires = (
         'glog/[>0.3.1]@ntc/stable'
@@ -24,9 +25,16 @@ class CeresSolverConan(ConanFile):
         else:
             self.requires('eigen/[>=3.2.0]@ntc/stable')
 
+    def configure(self):
+        self.options["glog"].shared = self.options.shared
+
     def source(self):
         self.run(f'git clone https://ceres-solver.googlesource.com/ceres-solver {self.name}')
         self.run(f'cd {self.name} && git checkout {self.version}')
+
+        patch_file = f'patch-{self.version}'
+        if os.path.exists(patch_file):
+            tools.patch(patch_file=patch_file, base_path=self.name)
 
     def build(self):
 
