@@ -5,15 +5,16 @@ from conans import ConanFile, CMake, tools
 class CeresSolverConan(ConanFile):
     """ Tested with versions: 1.9.0, 1.11.0, 1.13.0 """
 
-    name = 'ceres_solver'
-    license = 'http://ceres-solver.org/license.html'
-    url = 'http://ceres-solver.org/'
-    description = 'A large scale non-linear optimization library'
-    settings = 'os', 'compiler', 'build_type', 'arch'
-    options = {'shared': [True, False]}
+    name            = 'ceres_solver'
+    license         = 'http://ceres-solver.org/license.html'
+    url             = 'http://ceres-solver.org/'
+    description     = 'A large scale non-linear optimization library'
+    settings        = 'os', 'compiler', 'build_type', 'arch'
+    options         = {'shared': [True, False]}
     default_options = 'shared=True'
     exports         = "patch*"
-    generators = 'cmake'
+    build_policy    = 'missing'
+    generators      = 'cmake'
     requires = (
         'glog/[>0.3.1]@ntc/stable'
     )
