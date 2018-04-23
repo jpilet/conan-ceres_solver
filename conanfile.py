@@ -54,6 +54,18 @@ class CeresSolverConan(ConanFile):
         args.append('-Dglog_DIR:PATH=%s'%self.deps_cpp_info['glog'].rootpath)
         args.append('-DGLOG_INCLUDE_DIR:PATH=%s'%os.path.join(self.deps_cpp_info['glog'].rootpath, 'include'))
         args.append('-DGLOG_LIBRARY:PATH=%s'%';'.join(os.path.join(self.deps_cpp_info['glog'].rootpath, self.deps_cpp_info['glog'].libdirs[0], l) for l in self.deps_cpp_info['glog'].libs))
+        def guessGlogLib():
+            name = 'glog'
+            if 'Windows' == self.settings.os:
+                prefix = ''
+                suffix = 'lib'
+            else:
+                prefix = 'lib'
+                suffix = 'so' if self.options['glog'].shared else 'a'
+            return os.path.join(self.deps_cpp_info['glog'].rootpath, self.deps_cpp_info['glog'].libdirs[0], f'{prefix}{name}.{suffix}')
+
+        # If not specifies, ceres will find the system version
+        args.append('-DGLOG_LIBRARY:PATH=%s'%guessGlogLib())
 
         args.append('-Wno-dev')
 
