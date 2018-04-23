@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: future_fstrings -*-
+# -*- coding: utf-8 -*-
+
 import os, re
 from conans import ConanFile, CMake, tools
 
