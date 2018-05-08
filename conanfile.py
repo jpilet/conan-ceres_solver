@@ -14,7 +14,7 @@ class CeresSolverConan(ConanFile):
     license         = 'http://ceres-solver.org/license.html'
     url             = 'http://ceres-solver.org/'
     description     = 'A large scale non-linear optimization library'
-    settings        = 'os', 'compiler', 'build_type', 'arch'
+    settings        = 'os', 'compiler', 'build_type', 'arch', 'arch_build'
     options         = {
         'shared': [True, False],
         'fPIC':   [True, False],
@@ -26,6 +26,13 @@ class CeresSolverConan(ConanFile):
     requires = (
         'glog/[>0.3.1]@ntc/stable'
     )
+
+
+    def build_requirements(self):
+        if self.settings.arch_build == 'x86':
+            self.build_requires('cmake_installer/[>3.2.0,<=3.6.3]@conan/stable')
+        else:
+            self.build_requires('cmake_installer/[>3.2.0]@conan/stable')
 
     def requirements(self):
         version_major = int(self.version.split('.')[1])
