@@ -168,7 +168,6 @@ class CeresSolverConan(ConanFile):
 
         with open(dst, 'w') as f: f.write(data)
 
-
     def package_info(self):
         # The CMake files move in different versions, so we're going to use the
         # resdir to point to these.
@@ -182,12 +181,6 @@ class CeresSolverConan(ConanFile):
         else:
             self.output.warn('Not sure where to place CMake Find Script')
 
-        if self.settings.os == 'Linux':
-            lib = 'libceres.%s'%('so' if self.options.shared else 'a')
-        else:
-            lib = 'ceres.lib'
-
-        self.cpp_info.libs.append(lib)
-
+        self.cpp_info.libs = tools.collect_libs(self)
 
 # vim: ts=4 sw=4 expandtab ffs=unix ft=python foldmethod=marker :
