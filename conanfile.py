@@ -27,13 +27,6 @@ class CeresSolverConan(ConanFile):
         'glog/[>0.3.1]@ntc/stable'
     )
 
-
-    def build_requirements(self):
-        if self.settings.arch_build == 'x86':
-            self.build_requires('cmake_installer/[>3.2.0,<=3.6.3]@conan/stable')
-        else:
-            self.build_requires('cmake_installer/[>3.2.0]@conan/stable')
-
     def requirements(self):
         version_major = int(self.version.split('.')[1])
         if version_major < 13:
