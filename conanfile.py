@@ -119,6 +119,10 @@ class CeresSolverConan(ConanFile):
         # If not specifies, ceres will find the system version
         cmake.definitions['GLOG_LIBRARY:PATH'] = guessGlogLib()
 
+        # Disable SuiteSparse
+        cmake.definitions['SUITESPARSE:BOOL'] = 'OFF'
+        cmake.definitions['CXSPARSE:BOOL']    = 'OFF'
+
         return cmake
 
     def build(self):
