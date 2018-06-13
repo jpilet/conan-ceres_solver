@@ -5,6 +5,7 @@
 import os, re
 from conans import ConanFile, CMake, tools
 from conans.model.version import Version
+from conans.errors import ConanException
 
 
 class CeresSolverConan(ConanFile):
@@ -26,6 +27,25 @@ class CeresSolverConan(ConanFile):
     requires = (
         'glog/[>0.3.1]@ntc/stable'
     )
+
+    def system_requirements(self):
+        pack_names = None
+        if tools.os_info.linux_distro == "ubuntu":
+            pack_names = ['build-essential', 'libopenblas-dev']
+
+            if self.settings.arch == "x86":
+                full_pack_names = []
+                for pack_name in pack_names:
+                    full_pack_names += [pack_name + ":i386"]
+                pack_names = full_pack_names
+
+        if pack_names:
+            installer = tools.SystemPackageTool()
+            try:
+                installer.update() # Update the package database
+                installer.install(" ".join(pack_names)) # Install the package
+            except ConanException:
+                self.output.warn('Could not run system updates')
 
     def requirements(self):
         version_major = int(self.version.split('.')[1])
