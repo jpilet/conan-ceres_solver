@@ -12,6 +12,7 @@ class CeresSolverConan(ConanFile):
     """ Tested with versions: 1.9.0, 1.11.0, 1.13.0 """
 
     name            = 'ceres_solver'
+    version         = '1.9.0'
     license         = 'http://ceres-solver.org/license.html'
     url             = 'http://ceres-solver.org/'
     description     = 'A large scale non-linear optimization library'
