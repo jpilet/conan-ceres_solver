@@ -14,7 +14,7 @@ class CeresSolverConan(ConanFile):
     name            = 'ceres_solver'
     version         = '1.9.0'
     license         = 'http://ceres-solver.org/license.html'
-    url             = 'http://ceres-solver.org/'
+    url             = 'https://github.com/kheaactua/conan-ceres_solver'
     description     = 'A large scale non-linear optimization library'
     settings        = 'os', 'compiler', 'build_type', 'arch', 'arch_build'
     options         = {
@@ -32,7 +32,7 @@ class CeresSolverConan(ConanFile):
     def system_requirements(self):
         pack_names = None
         if tools.os_info.linux_distro == "ubuntu":
-            pack_names = ['build-essential', 'libopenblas-dev']
+            pack_names = ['libopenblas-dev', 'libcxsparse3.1.4', 'libsuitesparse-dev']
 
             if self.settings.arch == "x86":
                 full_pack_names = []
@@ -46,7 +46,26 @@ class CeresSolverConan(ConanFile):
                 installer.update() # Update the package database
                 installer.install(" ".join(pack_names)) # Install the package
             except ConanException:
-                self.output.warn('Could not run system updates')
+                self.output.warn('Could not run system updates for system requirements')
+
+    def build_requirements(self):
+        pack_names = None
+        if tools.os_info.linux_distro == "ubuntu":
+            pack_names = ['build-essential']
+
+            if self.settings.arch == "x86":
+                full_pack_names = []
+                for pack_name in pack_names:
+                    full_pack_names += [pack_name + ":i386"]
+                pack_names = full_pack_names
+
+        if pack_names:
+            installer = tools.SystemPackageTool()
+            try:
+                installer.update() # Update the package database
+                installer.install(" ".join(pack_names)) # Install the package
+            except ConanException:
+                self.output.warn('Could not run system updates for build requirements')
 
     def requirements(self):
         version_major = int(self.version.split('.')[1])
@@ -98,13 +117,13 @@ class CeresSolverConan(ConanFile):
 
         cmake.definitions['BUILD_SHARED_LIBS:BOOL'] = 'TRUE' if self.options.shared else 'FALSE'
         cmake.definitions['NO_CMAKE_PACKAGE_REGISTRY:BOOL'] = 'On'
-        cmake.definitions['EIGEN_INCLUDE_DIR:PATH'] = '%s'%os.path.join(self.deps_cpp_info['eigen'].rootpath, 'include', 'eigen3')
+        cmake.definitions['EIGEN_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['eigen'].rootpath, 'include', 'eigen3')
 
         # These two are reported as 'unused', but I think they are used by
         # cmake/Find*.cmake, or if not, they should be (would make the rest
         # simpler)
         cmake.definitions['Glog_DIR:PATH'] = self.deps_cpp_info['glog'].rootpath
-        cmake.definitions['Eigen3_DIR:PATH'] = '%s'%os.path.join(self.deps_cpp_info['eigen'].rootpath, 'share', 'eigen3', 'cmake')
+        cmake.definitions['Eigen3_DIR:PATH'] = os.path.join(self.deps_cpp_info['eigen'].rootpath, 'share', 'eigen3', 'cmake')
 
         cmake.definitions['GLOG_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['glog'].rootpath, 'include')
         def guessGlogLib():
@@ -119,10 +138,6 @@ class CeresSolverConan(ConanFile):
 
         # If not specifies, ceres will find the system version
         cmake.definitions['GLOG_LIBRARY:PATH'] = guessGlogLib()
-
-        # Disable SuiteSparse
-        cmake.definitions['SUITESPARSE:BOOL'] = 'OFF'
-        cmake.definitions['CXSPARSE:BOOL']    = 'OFF'
 
         return cmake
 
@@ -182,7 +197,7 @@ class CeresSolverConan(ConanFile):
         if m:
             data = data.replace(m.group('base'), '${CONAN_GLOG_ROOT}')
         else:
-            self.output.warn(f'Cannot find absolute path to Glog in CMake find script for Ceres-Solver: {src}')
+            self.output.warn(f'Cannot find absolute path to GLOG in CMake find script for Ceres-Solver: {src}')
 
         with open(dst, 'w') as f: f.write(data)
 
