@@ -26,32 +26,15 @@ class CeresSolverConan(ConanFile):
     exports         = "patch*"
     build_policy    = 'missing'
     requires = (
-        'glog/[>0.3.1]@ntc/stable'
+        'glog/[>0.3.1]@ntc/stable',
+        'suitesparse/[>4.0]@ntc/stable'
     )
 
-    def system_requirements(self):
-        pack_names = None
-        if tools.os_info.linux_distro == "ubuntu":
-            pack_names = ['libopenblas-dev', 'libcxsparse3.1.4', 'libsuitesparse-dev']
-
-            if self.settings.arch == "x86":
-                full_pack_names = []
-                for pack_name in pack_names:
-                    full_pack_names += [pack_name + ":i386"]
-                pack_names = full_pack_names
-
-        if pack_names:
-            installer = tools.SystemPackageTool()
-            try:
-                installer.update() # Update the package database
-                installer.install(" ".join(pack_names)) # Install the package
-            except ConanException:
-                self.output.warn('Could not run system updates for system requirements')
 
     def build_requirements(self):
         pack_names = None
         if tools.os_info.linux_distro == "ubuntu":
-            pack_names = ['build-essential']
+            pack_names = ['build-essential', 'libsuitesparse-dev']
 
             if self.settings.arch == "x86":
                 full_pack_names = []
@@ -138,6 +121,17 @@ class CeresSolverConan(ConanFile):
 
         # If not specifies, ceres will find the system version
         cmake.definitions['GLOG_LIBRARY:PATH'] = guessGlogLib()
+
+        cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
+        cmake.definitions['CXSPARSE:BOOL']    = 'ON'
+
+        cmake.definitions['SUITESPARSEQR_INCLUDE_DIR:PATH']      = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0])
+        cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']      = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libspqr.so')
+        cmake.definitions['SUITESPARSE_CONFIG_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
+        cmake.definitions['SUITESPARSE_CONFIG_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libsuitesparseconfig.so')
+
+        cmake.definitions['CXSPARSE_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
+        cmake.definitions['CXSPARSE_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libcxsparse.so')
 
         return cmake
 
