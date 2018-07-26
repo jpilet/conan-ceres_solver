@@ -27,7 +27,8 @@ class CeresSolverConan(ConanFile):
     build_policy    = 'missing'
     requires = (
         'glog/[>0.3.1]@ntc/stable',
-        'suitesparse/[>4.0]@ntc/stable'
+        'suitesparse/[>4.0]@ntc/stable',
+        'openblas/0.3.1@ntc/stable',
     )
 
 
@@ -122,16 +123,16 @@ class CeresSolverConan(ConanFile):
         # If not specifies, ceres will find the system version
         cmake.definitions['GLOG_LIBRARY:PATH'] = guessGlogLib()
 
-        cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
+        cmake.definitions['SUITESPARSE:BOOL'] = 'OFF'
         cmake.definitions['CXSPARSE:BOOL']    = 'ON'
 
-        cmake.definitions['SUITESPARSEQR_INCLUDE_DIR:PATH']      = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0])
-        cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']      = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libspqr.so')
-        cmake.definitions['SUITESPARSE_CONFIG_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
-        cmake.definitions['SUITESPARSE_CONFIG_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libsuitesparseconfig.so')
 
         cmake.definitions['CXSPARSE_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
         cmake.definitions['CXSPARSE_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libcxsparse.so')
+
+        libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], 'libopenblas.so')
+        cmake.definitions['BLAS_openblas_LIBRARY:FILEPATH']   = libopenblas
+        cmake.definitions['LAPACK_openblas_LIBRARY:FILEPATH'] = libopenblas
 
         return cmake
 
@@ -141,6 +142,10 @@ class CeresSolverConan(ConanFile):
 
         cmake = self._set_up_cmake()
         self.output.info('CMake flags:\n%s'%'\n'.join(args))
+        s = '\nCMake Definitions:\n'
+        for k,v in cmake.definitions.items():
+            s += ' - %s=%s\n'%(k, v)
+        self.output.info(s)
 
         cmake.configure(source_folder=self.name, args=args)
         cmake.build()
