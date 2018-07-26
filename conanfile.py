@@ -27,8 +27,6 @@ class CeresSolverConan(ConanFile):
     build_policy    = 'missing'
     requires = (
         'glog/[>0.3.1]@ntc/stable',
-        'suitesparse/[>4.0]@ntc/stable',
-        'openblas/0.3.1@ntc/stable',
     )
 
 
@@ -57,6 +55,10 @@ class CeresSolverConan(ConanFile):
             self.requires('eigen/[>=3.2.0,<3.3.4]@ntc/stable')
         else:
             self.requires('eigen/[>=3.2.0]@ntc/stable')
+
+        if 'Linux' == self.settings.os:
+            self.requires('suitesparse/[>4.0]@ntc/stable')
+            self.requires('openblas/0.3.1@ntc/stable')
 
     def config_options(self):
         if self.settings.compiler == "Visual Studio":
@@ -123,16 +125,16 @@ class CeresSolverConan(ConanFile):
         # If not specifies, ceres will find the system version
         cmake.definitions['GLOG_LIBRARY:PATH'] = guessGlogLib()
 
-        cmake.definitions['SUITESPARSE:BOOL'] = 'OFF'
-        cmake.definitions['CXSPARSE:BOOL']    = 'ON'
+        if 'Linux' == self.settings.os:
+            cmake.definitions['SUITESPARSE:BOOL'] = 'OFF'
+            cmake.definitions['CXSPARSE:BOOL']    = 'ON'
 
+            cmake.definitions['CXSPARSE_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
+            cmake.definitions['CXSPARSE_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libcxsparse.so')
 
-        cmake.definitions['CXSPARSE_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
-        cmake.definitions['CXSPARSE_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libcxsparse.so')
-
-        libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], 'libopenblas.so')
-        cmake.definitions['BLAS_openblas_LIBRARY:FILEPATH']   = libopenblas
-        cmake.definitions['LAPACK_openblas_LIBRARY:FILEPATH'] = libopenblas
+            libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], 'libopenblas.so')
+            cmake.definitions['BLAS_openblas_LIBRARY:FILEPATH']   = libopenblas
+            cmake.definitions['LAPACK_openblas_LIBRARY:FILEPATH'] = libopenblas
 
         return cmake
 
