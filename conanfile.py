@@ -26,18 +26,27 @@ class CeresSolverConan(ConanFile):
         'custom_blas': [True, False],
         'openblas':    [True, False],
     }
-    default_options = ('shared=True', 'fPIC=True', 'cxx11=True', 'suitesparse=True', 'cxsparse=False', 'custom_blas=True', 'openblas=True')
+    default_options = (
+        'shared=True',
+         'fPIC=True',
+         'cxx11=True',
+         'suitesparse=True',
+         'cxsparse=False',
+         'custom_blas=True',
+         'openblas=True',
+    )
     exports         = "patch*"
     build_policy    = 'missing'
     requires = (
         'glog/[>0.3.1]@ntc/stable',
+        'suitesparse/[>4.0]@ntc/stable',
     )
 
 
     def build_requirements(self):
         pack_names = None
         if tools.os_info.linux_distro == "ubuntu":
-            pack_names = ['build-essential', 'libsuitesparse-dev']
+            pack_names = ['build-essential'] # , 'libsuitesparse-dev']
 
             if self.settings.arch == "x86":
                 full_pack_names = []
@@ -60,9 +69,7 @@ class CeresSolverConan(ConanFile):
         else:
             self.requires('eigen/[>=3.2.0]@ntc/stable')
 
-        if 'Linux' == self.settings.os:
-            self.requires('suitesparse/[>4.0]@ntc/stable')
-            if self.options.openblas:
+        if 'Linux' == self.settings.os and self.options.openblas:
                 self.requires('openblas/0.3.1@ntc/stable')
 
     def config_options(self):
