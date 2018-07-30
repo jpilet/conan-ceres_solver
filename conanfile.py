@@ -138,51 +138,55 @@ class CeresSolverConan(ConanFile):
         cmake.definitions['GLOG_LIBRARY:PATH'] = guessGlogLib()
 
         if 'Linux' == self.settings.os:
-            cmake.definitions['CUSTOM_BLAS:BOOL'] = 'ON' if self.options.custom_blas else 'OFF'
+            libext = '.so'
+        else:
+            libext = '.lib'
 
-            if self.options.suitesparse:
-                cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
+        cmake.definitions['CUSTOM_BLAS:BOOL'] = 'ON' if self.options.custom_blas else 'OFF'
 
-                suitesparse_inc_base_dir = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0])
-                suitesparse_inc_dir      = os.path.join(suitesparse_inc_base_dir, 'suitesparse')
+        if self.options.suitesparse:
+            cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
 
-                suitesparse_lib_dir      = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0])
+            suitesparse_inc_base_dir = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0])
+            suitesparse_inc_dir      = os.path.join(suitesparse_inc_base_dir, 'suitesparse')
 
-                cmake.definitions['SUITESPARSEQR_INCLUDE_DIR:PATH']      = suitesparse_inc_base_dir
-                cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']      = os.path.join(suitesparse_lib_dir, 'libspqr.so')
+            suitesparse_lib_dir      = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0])
 
-                cmake.definitions['SUITESPARSE_CONFIG_INCLUDE_DIR:PATH'] = suitesparse_inc_dir
-                cmake.definitions['SUITESPARSE_CONFIG_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, 'libsuitesparseconfig.so')
+            cmake.definitions['SUITESPARSEQR_INCLUDE_DIR:PATH']      = suitesparse_inc_base_dir
+            cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']      = os.path.join(suitesparse_lib_dir, f'libspqr.{libext}')
 
-                cmake.definitions['AMD_INCLUDE_DIR:PATH']                = suitesparse_inc_dir
-                cmake.definitions['AMD_LIBRARY:FILEPATH']                = os.path.join(suitesparse_lib_dir, 'libamd.so')
+            cmake.definitions['SUITESPARSE_CONFIG_INCLUDE_DIR:PATH'] = suitesparse_inc_dir
+            cmake.definitions['SUITESPARSE_CONFIG_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, f'libsuitesparseconfig.{libext}')
 
-                cmake.definitions['CAMD_INCLUDE_DIR:PATH']               = suitesparse_inc_dir
-                cmake.definitions['CAMD_LIBRARY:FILEPATH']               = os.path.join(suitesparse_lib_dir, 'libcamd.so')
+            cmake.definitions['AMD_INCLUDE_DIR:PATH']                = suitesparse_inc_dir
+            cmake.definitions['AMD_LIBRARY:FILEPATH']                = os.path.join(suitesparse_lib_dir, f'libamd.{libext}')
 
-                cmake.definitions['COLAMD_INCLUDE_DIR:PATH']             = suitesparse_inc_dir
-                cmake.definitions['COLAMD_LIBRARY:FILEPATH']             = os.path.join(suitesparse_lib_dir, 'libspqr.so')
+            cmake.definitions['CAMD_INCLUDE_DIR:PATH']               = suitesparse_inc_dir
+            cmake.definitions['CAMD_LIBRARY:FILEPATH']               = os.path.join(suitesparse_lib_dir, f'libcamd.{libext}')
 
-                cmake.definitions['CCOLAMD_INCLUDE_DIR:PATH']            = suitesparse_inc_dir
-                cmake.definitions['CCOLAMD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, 'libcolamd.so')
+            cmake.definitions['COLAMD_INCLUDE_DIR:PATH']             = suitesparse_inc_dir
+            cmake.definitions['COLAMD_LIBRARY:FILEPATH']             = os.path.join(suitesparse_lib_dir, f'libspqr.{libext}')
 
-                cmake.definitions['CHOLMOD_INCLUDE_DIR:PATH']            = suitesparse_inc_dir
-                cmake.definitions['CHOLMOD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, 'libcholmod.so')
+            cmake.definitions['CCOLAMD_INCLUDE_DIR:PATH']            = suitesparse_inc_dir
+            cmake.definitions['CCOLAMD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, f'libcolamd.{libext}')
 
-                if 'openblas' in self.deps_cpp_info.deps:
-                    libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], 'libopenblas.so')
-                    cmake.definitions['BLAS_openblas_LIBRARY:FILEPATH']   = libopenblas
-                    cmake.definitions['LAPACK_openblas_LIBRARY:FILEPATH'] = libopenblas
+            cmake.definitions['CHOLMOD_INCLUDE_DIR:PATH']            = suitesparse_inc_dir
+            cmake.definitions['CHOLMOD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, f'libcholmod.{libext}')
 
-            else:
-                cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
+            if 'openblas' in self.deps_cpp_info.deps:
+                libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], f'libopenblas.{libext}')
+                cmake.definitions['BLAS_openblas_LIBRARY:FILEPATH']   = libopenblas
+                cmake.definitions['LAPACK_openblas_LIBRARY:FILEPATH'] = libopenblas
 
-            if self.options.cxsparse:
-                cmake.definitions['CXSPARSE:BOOL']    = 'ON'
-                cmake.definitions['CXSPARSE_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
-                cmake.definitions['CXSPARSE_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libcxsparse.so')
-            else:
-                cmake.definitions['CXSPARSE:BOOL']    = 'OFF'
+        else:
+            cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
+
+        if self.options.cxsparse:
+            cmake.definitions['CXSPARSE:BOOL']    = 'ON'
+            cmake.definitions['CXSPARSE_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
+            cmake.definitions['CXSPARSE_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libcxsparse.so')
+        else:
+            cmake.definitions['CXSPARSE:BOOL']    = 'OFF'
 
         return cmake
 
