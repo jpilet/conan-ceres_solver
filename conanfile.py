@@ -165,11 +165,14 @@ class CeresSolverConan(ConanFile):
             cmake.definitions['CAMD_INCLUDE_DIR:PATH']               = suitesparse_inc_dir
             cmake.definitions['CAMD_LIBRARY:FILEPATH']               = os.path.join(suitesparse_lib_dir, f'libcamd.{libext}')
 
+            cmake.definitions['SUITESPARSEQR_INCLUDE_DIR:PATH']      = suitesparse_inc_dir
+            cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']      = os.path.join(suitesparse_lib_dir, f'libspqr.{libext}')
+
             cmake.definitions['COLAMD_INCLUDE_DIR:PATH']             = suitesparse_inc_dir
-            cmake.definitions['COLAMD_LIBRARY:FILEPATH']             = os.path.join(suitesparse_lib_dir, f'libspqr.{libext}')
+            cmake.definitions['COLAMD_LIBRARY:FILEPATH']             = os.path.join(suitesparse_lib_dir, f'libcolamd.{libext}')
 
             cmake.definitions['CCOLAMD_INCLUDE_DIR:PATH']            = suitesparse_inc_dir
-            cmake.definitions['CCOLAMD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, f'libcolamd.{libext}')
+            cmake.definitions['CCOLAMD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, f'libccolamd.{libext}')
 
             cmake.definitions['CHOLMOD_INCLUDE_DIR:PATH']            = suitesparse_inc_dir
             cmake.definitions['CHOLMOD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, f'libcholmod.{libext}')
