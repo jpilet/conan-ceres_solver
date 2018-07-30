@@ -75,6 +75,7 @@ class CeresSolverConan(ConanFile):
     def config_options(self):
         if self.settings.compiler == "Visual Studio":
             self.options.remove("fPIC")
+            self.options.remove("openblas")
 
     def configure(self):
         self.options["glog"].shared = self.options.shared
@@ -156,7 +157,7 @@ class CeresSolverConan(ConanFile):
             cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']      = os.path.join(suitesparse_lib_dir, f'libspqr.{libext}')
 
             cmake.definitions['SUITESPARSE_CONFIG_INCLUDE_DIR:PATH'] = suitesparse_inc_dir
-            cmake.definitions['SUITESPARSE_CONFIG_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, f'libsuitesparseconfig.{libext}')
+            cmake.definitions['SUITESPARSE_CONFIG_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, '%ssuitesparseconfig.%s'%('lib' if 'Linux' == self.settings.os else '', libext))
 
             cmake.definitions['AMD_INCLUDE_DIR:PATH']                = suitesparse_inc_dir
             cmake.definitions['AMD_LIBRARY:FILEPATH']                = os.path.join(suitesparse_lib_dir, f'libamd.{libext}')
@@ -176,6 +177,9 @@ class CeresSolverConan(ConanFile):
             if 'Windows' == self.settings.os:
                 cmake.definitions['SUITESPARSE_INCLUDE_DIR_HINTS:PATH'] = suitesparse_inc_dir
                 cmake.definitions['SUITESPARSE_LIBRARY_DIR_HINTS:PATH'] = suitesparse_lib_dir
+                if 'openblas' not in self.deps_cpp_info.deps:
+                    cmake.definitions['BLAS_blas_LIBRARY:FILEPATH']     = os.path.join(suitesparse_lib_dir, f'libblas.{libext}')
+                    cmake.definitions['LAPACK_lapack_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, f'liblapack.{libext}')
 
             if 'openblas' in self.deps_cpp_info.deps:
                 libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], f'libopenblas.{libext}')
