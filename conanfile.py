@@ -23,8 +23,7 @@ class CeresSolverConan(ConanFile):
         'cxx11':  [True, False],
         'suitesparse': [True, False],
         'cxsparse':    [True, False],
-        'custom_blas': [True, False],
-        'openblas':    [True, False],
+        'blas':        ['openblas', 'blas', 'custom', 'system'], # System basically doesn't do anything which should search system paths
     }
     default_options = (
         'shared=True',
@@ -32,8 +31,7 @@ class CeresSolverConan(ConanFile):
          'cxx11=True',
          'suitesparse=True',
          'cxsparse=False',
-         'custom_blas=True',
-         'openblas=True',
+         'blas=system',
     )
     exports         = "patch*"
     build_policy    = 'missing'
@@ -69,13 +67,20 @@ class CeresSolverConan(ConanFile):
         else:
             self.requires('eigen/[>=3.2.0]@ntc/stable')
 
-        if 'Linux' == self.settings.os and self.options.openblas:
-                self.requires('openblas/0.3.1@ntc/stable')
+        if 'Linux' == self.settings.os:
+            if 'openblas' == self.options.blas:
+                if '16.04' == tools.os_info.os_version:
+                    self.output.warn('Local versions of openblas seem to be missing the gotoblas symbol, which leads to linking errors.  Therefore, skipping attempting to link against local openblas')
+                else:
+                    self.requires('openblas/0.3.1@ntc/stable')
+            elif 'blas' == self.options.blas:
+                self.requires('lapack/3.7.1@conan/stable')
+
 
     def config_options(self):
         if self.settings.compiler == "Visual Studio":
             self.options.remove("fPIC")
-            self.options.remove("openblas")
+            self.options.remove("blas")
 
     def configure(self):
         self.options["glog"].shared = self.options.shared
@@ -143,7 +148,21 @@ class CeresSolverConan(ConanFile):
         else:
             libext = 'lib'
 
-        cmake.definitions['CUSTOM_BLAS:BOOL'] = 'ON' if self.options.custom_blas else 'OFF'
+        if 'custom' == self.options.blas:
+            cmake.definitions['CUSTOM_BLAS:BOOL'] = 'ON'
+        else:
+            cmake.definitions['CUSTOM_BLAS:BOOL'] = 'OFF'
+
+            if 'openblas' in self.deps_cpp_info.deps:
+                libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], f'libopenblas.{libext}')
+                cmake.definitions['BLAS_openblas_LIBRARY:FILEPATH']   = libopenblas
+                cmake.definitions['LAPACK_openblas_LIBRARY:FILEPATH'] = libopenblas
+
+            if 'lapack' in self.deps_cpp_info.deps:
+                libdir = os.path.join(self.deps_cpp_info['lapack'].rootpath, self.deps_cpp_info['lapack'].libdirs[0])
+                cmake.definitions['BLAS_blas_LIBRARY:FILEPATH']     = os.path.join(libdir, f'libblas.{libext}')
+                cmake.definitions['LAPACK_lapack_LIBRARY:FILEPATH'] = os.path.join(libdir, f'liblapack.{libext}')
+
 
         if self.options.suitesparse:
             cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
@@ -165,8 +184,8 @@ class CeresSolverConan(ConanFile):
             cmake.definitions['CAMD_INCLUDE_DIR:PATH']               = suitesparse_inc_dir
             cmake.definitions['CAMD_LIBRARY:FILEPATH']               = os.path.join(suitesparse_lib_dir, f'libcamd.{libext}')
 
-            cmake.definitions['SUITESPARSEQR_INCLUDE_DIR:PATH']     = suitesparse_inc_dir
-            cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']     = os.path.join(suitesparse_lib_dir, f'libspqr.{libext}')
+            cmake.definitions['SUITESPARSEQR_INCLUDE_DIR:PATH']      = suitesparse_inc_dir
+            cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']      = os.path.join(suitesparse_lib_dir, f'libspqr.{libext}')
 
             cmake.definitions['COLAMD_INCLUDE_DIR:PATH']             = suitesparse_inc_dir
             cmake.definitions['COLAMD_LIBRARY:FILEPATH']             = os.path.join(suitesparse_lib_dir, f'libcolamd.{libext}')
@@ -180,14 +199,6 @@ class CeresSolverConan(ConanFile):
             if 'Windows' == self.settings.os:
                 cmake.definitions['SUITESPARSE_INCLUDE_DIR_HINTS:PATH'] = suitesparse_inc_dir
                 cmake.definitions['SUITESPARSE_LIBRARY_DIR_HINTS:PATH'] = suitesparse_lib_dir
-                if 'openblas' not in self.deps_cpp_info.deps:
-                    cmake.definitions['BLAS_blas_LIBRARY:FILEPATH']     = os.path.join(suitesparse_lib_dir, f'libblas.{libext}')
-                    cmake.definitions['LAPACK_lapack_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, f'liblapack.{libext}')
-
-            if 'openblas' in self.deps_cpp_info.deps:
-                libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], f'libopenblas.{libext}')
-                cmake.definitions['BLAS_openblas_LIBRARY:FILEPATH']   = libopenblas
-                cmake.definitions['LAPACK_openblas_LIBRARY:FILEPATH'] = libopenblas
 
         else:
             cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
