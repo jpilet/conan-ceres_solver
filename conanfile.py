@@ -31,7 +31,7 @@ class CeresSolverConan(ConanFile):
          'cxx11=True',
          'suitesparse=True',
          'cxsparse=False',
-         'blas=blas',
+         'blas=system',
     )
     exports         = "patch*"
     build_policy    = 'missing'
