@@ -148,17 +148,17 @@ class CeresSolverConan(ConanFile):
         else:
             libext = 'lib'
 
-        if 'custom' == self.options.blas:
+        if 'blas' in self.options and self.options.blas == 'custom':
             cmake.definitions['CUSTOM_BLAS:BOOL'] = 'ON'
         else:
             cmake.definitions['CUSTOM_BLAS:BOOL'] = 'OFF'
 
-            if 'openblas' in self.deps_cpp_info.deps:
+            if 'blas' in self.options and 'openblas' == self.options.blas and 'openblas' in self.deps_cpp_info.deps:
                 libopenblas = os.path.join(self.deps_cpp_info['openblas'].rootpath, self.deps_cpp_info['openblas'].libdirs[0], f'libopenblas.{libext}')
                 cmake.definitions['BLAS_openblas_LIBRARY:FILEPATH']   = libopenblas
                 cmake.definitions['LAPACK_openblas_LIBRARY:FILEPATH'] = libopenblas
 
-            if 'lapack' in self.deps_cpp_info.deps:
+            if 'blas' in self.options and 'blas' == self.options.blas and 'lapack' in self.deps_cpp_info.deps:
                 libdir = os.path.join(self.deps_cpp_info['lapack'].rootpath, self.deps_cpp_info['lapack'].libdirs[0])
                 cmake.definitions['BLAS_blas_LIBRARY:FILEPATH']     = os.path.join(libdir, f'libblas.{libext}')
                 cmake.definitions['LAPACK_lapack_LIBRARY:FILEPATH'] = os.path.join(libdir, f'liblapack.{libext}')
