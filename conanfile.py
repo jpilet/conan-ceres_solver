@@ -80,7 +80,6 @@ class CeresSolverConan(ConanFile):
     def config_options(self):
         if self.settings.compiler == "Visual Studio":
             self.options.remove("fPIC")
-            self.options.remove("blas")
 
     def configure(self):
         self.options["glog"].shared = self.options.shared
