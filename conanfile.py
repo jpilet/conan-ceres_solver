@@ -66,7 +66,7 @@ class CeresSolverConan(ConanFile):
         else:
             self.requires('eigen/[>=3.2.0]@ntc/stable')
 
-        if 'Linux' == self.settings.os:
+        if tools.os_info.is_linux:
             if 'openblas' == self.options.blas:
                 if '16.04' == tools.os_info.os_version:
                     self.output.warn('Local versions of openblas seem to be missing the gotoblas symbol, which leads to linking errors.  Therefore, skipping attempting to link against local openblas')
@@ -124,7 +124,7 @@ class CeresSolverConan(ConanFile):
         # if len(cxx_flags):
         #     cmake.definitions['ADDITIONAL_CXX_FLAGS:STRING'] = ' '.join(cxx_flags)
 
-        if 'Linux' == self.settings.os:
+        if tools.os_info.is_linux:
             cmake.definitions['BUILD_SHARED_LIBS:BOOL'] = 'TRUE' if self.options.shared else 'FALSE'
         cmake.definitions['NO_CMAKE_PACKAGE_REGISTRY:BOOL'] = 'On'
         cmake.definitions['EIGEN_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['eigen'].rootpath, 'include', 'eigen3')
@@ -138,7 +138,7 @@ class CeresSolverConan(ConanFile):
         cmake.definitions['GLOG_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['glog'].rootpath, 'include')
         def guessGlogLib():
             name = 'glog'
-            if 'Windows' == self.settings.os:
+            if tools.os_info.is_windows:
                 prefix = ''
                 suffix = 'lib'
             else:
@@ -149,7 +149,7 @@ class CeresSolverConan(ConanFile):
         # If not specifies, ceres will find the system version
         cmake.definitions['GLOG_LIBRARY:PATH'] = guessGlogLib()
 
-        if 'Linux' == self.settings.os:
+        if tools.os_info.is_linux:
             libext = 'so'
         else:
             libext = 'lib'
@@ -183,7 +183,7 @@ class CeresSolverConan(ConanFile):
             cmake.definitions['SUITESPARSEQR_LIBRARY:FILEPATH']      = os.path.join(suitesparse_lib_dir, f'libspqr.{libext}')
 
             cmake.definitions['SUITESPARSE_CONFIG_INCLUDE_DIR:PATH'] = suitesparse_inc_dir
-            cmake.definitions['SUITESPARSE_CONFIG_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, '%ssuitesparseconfig.%s'%('lib' if 'Linux' == self.settings.os else '', libext))
+            cmake.definitions['SUITESPARSE_CONFIG_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, '%ssuitesparseconfig.%s'%('lib' if tools.os_info.is_linux else '', libext))
 
             cmake.definitions['AMD_INCLUDE_DIR:PATH']                = suitesparse_inc_dir
             cmake.definitions['AMD_LIBRARY:FILEPATH']                = os.path.join(suitesparse_lib_dir, f'libamd.{libext}')
@@ -203,7 +203,7 @@ class CeresSolverConan(ConanFile):
             cmake.definitions['CHOLMOD_INCLUDE_DIR:PATH']            = suitesparse_inc_dir
             cmake.definitions['CHOLMOD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, f'libcholmod.{libext}')
 
-            if 'Windows' == self.settings.os:
+            if tools.os_info.is_windows:
                 cmake.definitions['SUITESPARSE_INCLUDE_DIR_HINTS:PATH'] = suitesparse_inc_dir
                 cmake.definitions['SUITESPARSE_LIBRARY_DIR_HINTS:PATH'] = suitesparse_lib_dir
                 cmake.definitions['LAPACK:BOOL'] = 'On'
@@ -220,7 +220,7 @@ class CeresSolverConan(ConanFile):
             cmake.definitions['CXSPARSE_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0], 'suitesparse')
             cmake.definitions['CXSPARSE_LIBRARY:FILEPATH'] = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].libdirs[0], 'libcxsparse.so')
 
-            if 'Windows' == self.settings.os:
+            if tools.os_info.is_windows:
                 cmake.definitions['CXSPARSE_INCLUDE_DIR_HINTS:PATH']    = suitesparse_inc_dir
                 cmake.definitions['CXSPARSE_LIBRARY_DIR_HINTS:PATH']    = suitesparse_lib_dir
 
