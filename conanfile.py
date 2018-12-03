@@ -12,7 +12,7 @@ class CeresSolverConan(ConanFile):
     """ Tested with versions: 1.9.0, 1.11.0, 1.13.0 """
 
     name            = 'ceres_solver'
-    version         = '1.9.0'
+    version         = '1.14.0'
     license         = 'http://ceres-solver.org/license.html'
     url             = 'https://github.com/kheaactua/conan-ceres_solver'
     description     = 'A large scale non-linear optimization library'
@@ -37,6 +37,7 @@ class CeresSolverConan(ConanFile):
     build_policy    = 'missing'
     requires = (
         'glog/[>0.3.1]@ntc/stable',
+        'eigen/[>=3.2.0]@ntc/stable',
     )
 
 
@@ -60,12 +61,6 @@ class CeresSolverConan(ConanFile):
                 self.output.warn('Could not run system updates for build requirements')
 
     def requirements(self):
-        version_major = int(self.version.split('.')[1])
-        if version_major < 13:
-            self.requires('eigen/[>=3.2.0,<3.3.4]@ntc/stable')
-        else:
-            self.requires('eigen/[>=3.2.0]@ntc/stable')
-
         if tools.os_info.is_linux:
             if 'openblas' == self.options.blas:
                 if '16.04' == tools.os_info.os_version:
