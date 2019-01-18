@@ -306,6 +306,16 @@ class CeresSolverConan(ConanFile):
         else:
             self.output.warn('Not sure where to place CMake Find Script')
 
+        if tools.os_info.is_linux:
+            # Clean libdirs
+            for p in self.cpp_info.libdirs:
+                if not os.path.exists(os.path.join(self.package_folder, p)):
+                    self.cpp_info.libdirs.remove(p)
+
+            for l in 'lib', 'lib64', 'lib32':
+                if os.path.exists(os.path.join(self.package_folder, l)):
+                    self.cpp_info.libdirs.append(l)
+
         self.cpp_info.libs = tools.collect_libs(self)
 
 # vim: ts=4 sw=4 expandtab ffs=unix ft=python foldmethod=marker :
