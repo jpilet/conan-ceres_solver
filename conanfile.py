@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: future_fstrings -*-
-# -*- coding: utf-8 -*-
 
 import os, re
 from conans import ConanFile, CMake, tools
@@ -21,9 +19,10 @@ class CeresSolverConan(ConanFile):
         'shared': [True, False],
         'fPIC':   [True, False],
         'cxx11':  [True, False],
-        'suitesparse': [True, False],
+        'suitesparse': [True, False, 'system'],
         'cxsparse':    [True, False],
         'blas':        ['openblas', 'blas', 'custom', 'system'], # System basically doesn't do anything which should search system paths
+        'gflags': [True, False]
     }
     default_options = (
         'shared=True',
@@ -32,6 +31,7 @@ class CeresSolverConan(ConanFile):
         'suitesparse=True',
         'cxsparse=False',
         'blas=system',
+        'gflags=True'
     )
     exports         = "patch*"
     build_policy    = 'missing'
@@ -61,6 +61,9 @@ class CeresSolverConan(ConanFile):
                 self.output.warn('Could not run system updates for build requirements')
 
     def requirements(self):
+        if self.options.gflags:
+            self.requires("gflags/[>2.2.0]@bincrafters/stable")
+
         if tools.os_info.is_linux:
             if 'openblas' == self.options.blas:
                 if '16.04' == tools.os_info.os_version:
@@ -70,7 +73,8 @@ class CeresSolverConan(ConanFile):
             elif 'blas' == self.options.blas:
                 self.requires('lapack/3.7.1@conan/stable')
 
-            self.requires('suitesparse/[>4.0]@ntc/stable')
+            if 'system' != self.options.suitesparse:
+                self.requires('suitesparse/[>4.0]@ntc/stable')
         else:
             # Our SuiteSparse recipe builds a different version if we're on
             # Windows, and includes lapack/blas
@@ -127,22 +131,15 @@ class CeresSolverConan(ConanFile):
         # These two are reported as 'unused', but I think they are used by
         # cmake/Find*.cmake, or if not, they should be (would make the rest
         # simpler)
-        cmake.definitions['Glog_DIR:PATH'] = self.deps_cpp_info['glog'].rootpath
         cmake.definitions['Eigen3_DIR:PATH'] = os.path.join(self.deps_cpp_info['eigen'].rootpath, 'share', 'eigen3', 'cmake')
 
-        cmake.definitions['GLOG_INCLUDE_DIR:PATH'] = os.path.join(self.deps_cpp_info['glog'].rootpath, 'include')
-        def guessGlogLib():
-            name = 'glog'
-            if tools.os_info.is_windows:
-                prefix = ''
-                suffix = 'lib'
-            else:
-                prefix = 'lib'
-                suffix = 'so' if self.options['glog'].shared else 'a'
-            return os.path.join(self.deps_cpp_info['glog'].rootpath, self.deps_cpp_info['glog'].libdirs[0], f'{prefix}{name}.{suffix}')
+        cmake.definitions['BUILD_TESTING'] = 'OFF'
+        cmake.definitions['BUILD_EXAMPLES'] = 'OFF'
+        cmake.definitions['glog_DIR'] = self.deps_cpp_info['glog'].rootpath + '/lib/cmake/glog'
 
-        # If not specifies, ceres will find the system version
-        cmake.definitions['GLOG_LIBRARY:PATH'] = guessGlogLib()
+        if self.options.gflags:
+            cmake.definitions['GFLAGS_PREFER_EXPORTED_GFLAGS_CMAKE_CONFIGURATION'] = 'ON'
+            cmake.definitions['gflags_DIR'] = self.deps_cpp_info['gflags'].rootpath + '/lib/cmake/gflags'
 
         if tools.os_info.is_linux:
             libext = 'so'
@@ -166,7 +163,7 @@ class CeresSolverConan(ConanFile):
                 cmake.definitions['LAPACK_lapack_LIBRARY:FILEPATH'] = os.path.join(libdir, f'liblapack.{libext}')
 
 
-        if self.options.suitesparse:
+        if self.options.suitesparse == True:
             cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
 
             suitesparse_inc_base_dir = os.path.join(self.deps_cpp_info['suitesparse'].rootpath, self.deps_cpp_info['suitesparse'].includedirs[0])
@@ -199,16 +196,19 @@ class CeresSolverConan(ConanFile):
             cmake.definitions['CHOLMOD_LIBRARY:FILEPATH']            = os.path.join(suitesparse_lib_dir, f'libcholmod.{libext}')
 
             if tools.os_info.is_windows:
-                cmake.definitions['SUITESPARSE_INCLUDE_DIR_HINTS:PATH'] = suitesparse_inc_dir
-                cmake.definitions['SUITESPARSE_LIBRARY_DIR_HINTS:PATH'] = suitesparse_lib_dir
+                if 'system' != self.options.suitesparse:
+                    cmake.definitions['SUITESPARSE_INCLUDE_DIR_HINTS:PATH'] = suitesparse_inc_dir
+                    cmake.definitions['SUITESPARSE_LIBRARY_DIR_HINTS:PATH'] = suitesparse_lib_dir
                 cmake.definitions['LAPACK:BOOL'] = 'On'
                 cmake.definitions['CMAKE_LIBRARY_PATH'] = '%s;%s'%(suitesparse_lib_dir, re.sub('lib$', 'bin', suitesparse_lib_dir))
                 cmake.definitions['BLAS_blas_LIBRARY:FILEPATH']     = os.path.join(suitesparse_lib_dir, f'libblas.{libext}')
                 cmake.definitions['LAPACK_lapack_LIBRARY:FILEPATH'] = os.path.join(suitesparse_lib_dir, f'liblapack.{libext}')
 
 
-        else:
+        elif 'system' == self.options.suitesparse:
             cmake.definitions['SUITESPARSE:BOOL'] = 'ON'
+        else:
+            cmake.definitions['SUITESPARSE:BOOL'] = 'OFF'
 
         if self.options.cxsparse:
             cmake.definitions['CXSPARSE:BOOL']    = 'ON'
